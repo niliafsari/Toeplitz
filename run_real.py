@@ -1,0 +1,29 @@
+import sys
+import numpy as np
+from mpi4py import MPI
+from parallel_decom_pading import *
+import re
+if len(sys.argv) < 2:
+    print "Usage: %s filename(withoutextention)" % (sys.argv[0])
+    sys.exit(1)
+    
+np.set_printoptions(precision=2, suppress=True, linewidth=5000)
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+filename=sys.argv[1]
+matchObj = re.search('meff_(\d*)',filename) 
+if matchObj:    
+	meff_f=matchObj.group(1)
+else:
+	sys.exit(1)
+matchObj = re.search('numblock_(\d*)',filename) 
+if matchObj:    
+	neff=matchObj.group(1)
+else:
+	sys.exit(1)
+filepath='processedData/'+filename+'.dat'
+resultpath_uc='results/'+filename+'_uc.npy'
+uc=block_toeplitz_par(filepath,int(neff),int(meff_f),1)
+if rank==0:
+	print uc,uc.shape
+	np.save(resultpath_uc,uc)
